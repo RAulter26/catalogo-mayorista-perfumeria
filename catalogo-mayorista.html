@@ -1952,16 +1952,27 @@ const PedidoDrawer = ({open, onClose, items, setItems, showPrice, showToast}) =>
         createdAt,
       });
       const pdfBase64 = arrayBufferToBase64(pdfBuffer);
-      const saved = await saveQuoteRecord({ fileName, pdfBase64, payload });
+      let saved;
+      try {
+        saved = await saveQuoteRecord({ fileName, pdfBase64, payload });
+      } catch (_serverErr) {
+        // Sin servidor local (GitHub Pages / hosting estático) → descarga directa
+        const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fileName; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 6000);
+        saved = { fileName };
+      }
 
       setFormOpen(false);
       setLastSavedQuote(saved);
-      if (showToast) showToast('PDF guardado: ' + (saved.fileName || fileName));
+      if (showToast) showToast('PDF listo: ' + (saved.fileName || fileName));
 
       const message = buildMsg(payload.client, saved.fileName || fileName);
       window.open(waLink(message), '_blank', 'noopener,noreferrer');
     } catch (err) {
-      setFormError(err?.message || 'No se pudo generar y guardar la cotizacion PDF.');
+      setFormError(err?.message || 'No se pudo generar la cotizacion PDF.');
     } finally {
       setSaving(false);
     }
