@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: catalogo-perfumeria
+    env: node
+    plan: free
+    buildCommand: echo "sin build"
+    startCommand: node server-catalogo.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: ADMIN_KEY
+        value: perfumeria2026
